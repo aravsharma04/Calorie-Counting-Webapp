@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="hero">
+    <h1 class="title">Welcome back, {{ current_user.username }}</h1>
+    <p class="subtitle">AI-powered calorie tracking tailored to your body.</p>
+</div>
+
+<div class="stats-card">
+    <div class="stat">
+        <h3>Food</h3>
+        <p>{{ total_food }} kcal</p>
+    </div>
+    <div class="stat">
+        <h3>Exercise</h3>
+        <p>{{ total_exercise }} kcal</p>
+    </div>
+    <div class="stat">
+        <h3>Net</h3>
+        <p>{{ net }} kcal</p>
+    </div>
+    <div class="stat">
+        <h3>Goal</h3>
+        <p>{{ calorie_goal | int }} kcal</p>
+    </div>
+</div>
+
+<div class="chart-container">
+    <canvas id="weekChart"></canvas>
+</div>
+
+<h2 class="entry-title">Today's Entries</h2>
+
+<form method="post" action="{{ url_for('main.add_entry') }}" class="form-inline">
+    <select name="type" required>
+        <option value="food">Food</option>
+        <option value="exercise">Exercise</option>
+    </select>
+    <input type="text" name="name" placeholder="Item name" required>
+    <input type="number" name="calories" placeholder="Calories" required>
+    <button type="submit">Add</button>
+</form>
+
+<table class="entries-table">
+    <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Calories</th>
+        <th></th>
+    </tr>
+    {% for e in entries %}
+    <tr>
+        <td>{{ e.type }}</td>
+        <td>{{ e.name }}</td>
+        <td>{{ e.calories }}</td>
+        <td><a class="delete" href="{{ url_for('main.delete_entry', id=e.id) }}">Delete</a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+<!-- animated bubbles -->
+<div class="bubble-container">
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+</div>
+
+<script>
+    const ctx = document.getElementById('weekChart').getContext('2d');
+    const labels = {{ days|tojson }};
+    const data = {{ net_values|tojson }};
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Net calories (7 days)',
+                data: data,
+                tension: 0.3
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+
+{% endblock %}
